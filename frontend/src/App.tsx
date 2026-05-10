@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import { LeadList } from '@/features/leads/LeadList';
 import { AddLeadDialog } from '@/features/leads/AddLeadDialog';
+import { TimelineDialog } from '@/features/leads/TimelineDialog';
 
 function App() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
@@ -25,10 +27,14 @@ function App() {
         </div>
       </header>
       <main className="mx-auto max-w-[1100px] px-6 pt-12 pb-24">
-        <LeadList />
+        <LeadList onLeadClick={(lead) => setActiveLeadId(lead._id)} />
       </main>
 
       <AddLeadDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
+      <TimelineDialog
+        leadId={activeLeadId}
+        onClose={() => setActiveLeadId(null)}
+      />
     </div>
   );
 }

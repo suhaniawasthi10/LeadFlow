@@ -38,7 +38,7 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
           </p>
         </div>
         <span className="shrink-0 text-xs text-gray-400">
-          {formatDistanceToNow(lead.lastDiscussionAt ?? lead.createdAt, { addSuffix: true })}
+          {formatDistanceToNow(lead.updatedAt, { addSuffix: true })}
         </span>
       </div>
     </button>

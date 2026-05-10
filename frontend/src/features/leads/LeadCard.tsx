@@ -28,15 +28,18 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
           {lead.company && (
             <p className="mt-0.5 text-xs text-gray-500">{lead.company}</p>
           )}
-          {lead.lastDiscussionNote && (
-            <p className="mt-2 line-clamp-1 text-sm text-gray-700">{lead.lastDiscussionNote}</p>
-          )}
+          <p
+            className={cn(
+              'mt-2 line-clamp-1 text-sm',
+              lead.lastDiscussionNote ? 'text-gray-700' : 'text-gray-400',
+            )}
+          >
+            {lead.lastDiscussionNote ?? 'No discussions yet'}
+          </p>
         </div>
-        {lead.lastDiscussionAt && (
-          <span className="shrink-0 text-xs text-gray-400">
-            {formatDistanceToNow(lead.lastDiscussionAt, { addSuffix: true })}
-          </span>
-        )}
+        <span className="shrink-0 text-xs text-gray-400">
+          {formatDistanceToNow(lead.lastDiscussionAt ?? lead.createdAt, { addSuffix: true })}
+        </span>
       </div>
     </button>
   );

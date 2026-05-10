@@ -22,3 +22,14 @@ export async function fetchLeads(): Promise<Lead[]> {
   const { data } = await api.get<RawLead[]>('/leads');
   return data.map(parseLead);
 }
+
+export interface CreateLeadInput {
+  name: string;
+  company?: string;
+  phone?: string;
+}
+
+export async function createLead(input: CreateLeadInput): Promise<Lead> {
+  const { data } = await api.post<RawLead>('/leads', input);
+  return parseLead(data);
+}

@@ -114,24 +114,29 @@ async function seed(): Promise<void> {
     // Newest discussion drives the lead's denormalized fields and follow-up.
     const newestFirst = [...seedLead.discussions].sort((a, b) => a.hoursAgo - b.hoursAgo);
     const latest = newestFirst[0];
+    const latestAt = subHours(now, latest.hoursAgo);
 
     const followUpAt =
       latest.followUpDays !== undefined ? addDays(now, latest.followUpDays) : undefined;
 
-    const lead = await Lead.create({
+    // Bypass Mongoose's auto-timestamps so updatedAt matches lastDiscussionAt.
+    // In production the discussion-create cascade keeps these in sync; the seed
+    // mimics that end state directly so "recent activity" sort works on demo data.
+    const { insertedId: leadId } = await Lead.collection.insertOne({
       name: seedLead.name,
       company: seedLead.company,
       phone: seedLead.phone,
       status: seedLead.status,
       followUpAt,
       lastDiscussionNote: latest.note,
-      lastDiscussionAt: subHours(now, latest.hoursAgo),
+      lastDiscussionAt: latestAt,
+      createdAt: latestAt,
+      updatedAt: latestAt,
     });
 
-    // Bypass Mongoose's auto-timestamps so we can backdate discussions for
-    // realistic "X hours ago" labels in the UI.
+    // Backdated discussions for realistic "X hours ago" labels in the UI.
     const discussionDocs = seedLead.discussions.map((d) => ({
-      leadId: lead._id,
+      leadId,
       note: d.note,
       followUpAt: d.followUpDays !== undefined ? addDays(now, d.followUpDays) : undefined,
       createdAt: subHours(now, d.hoursAgo),

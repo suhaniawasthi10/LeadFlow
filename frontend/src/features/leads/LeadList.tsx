@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { isToday } from 'date-fns';
-import { Flag } from 'lucide-react';
+import { Flag, Search, X } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { LeadCard } from './LeadCard';
+import { Input } from '@/components/ui/input';
 import { LEAD_STATUSES, type Lead, type LeadStatus } from '@/types/lead';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +22,9 @@ interface LeadListProps {
 export function LeadList({ onLeadClick }: LeadListProps) {
   const { data: leads, isLoading, isError } = useLeads();
   const [activeFilter, setActiveFilter] = useState<FilterValue>('all');
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  const searchQuery = debouncedSearch.trim().toLowerCase();
 
   if (isLoading) {
     return (
@@ -53,16 +58,59 @@ export function LeadList({ onLeadClick }: LeadListProps) {
     );
   }
 
-  const todayFollowUps = allLeads.filter(
-    (l) => l.followUpAt && isToday(l.followUpAt),
-  );
+  // Search and status filter both narrow the entire view (today's section + main).
+  // Then today's gets extracted out of the main list so leads don't appear twice.
+  const searchedLeads = searchQuery
+    ? allLeads.filter((l) => l.name.toLowerCase().includes(searchQuery))
+    : allLeads;
+
   const filteredLeads =
     activeFilter === 'all'
-      ? allLeads
-      : allLeads.filter((l) => l.status === activeFilter);
+      ? searchedLeads
+      : searchedLeads.filter((l) => l.status === activeFilter);
+
+  const todayFollowUps = filteredLeads.filter(
+    (l) => l.followUpAt && isToday(l.followUpAt),
+  );
+  const todayIds = new Set(todayFollowUps.map((l) => l._id));
+  const mainListLeads = filteredLeads.filter((l) => !todayIds.has(l._id));
+
+  const rawSearch = searchInput.trim();
+  const emptyMessage =
+    rawSearch && activeFilter !== 'all'
+      ? `No leads match "${rawSearch}" in ${activeFilter}`
+      : rawSearch
+        ? `No leads match "${rawSearch}"`
+        : activeFilter !== 'all'
+          ? `No ${activeFilter} leads`
+          : 'No leads match';
 
   return (
     <div>
+      {/* Search input */}
+      <div className="mb-4">
+        <div className="relative max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search leads by name…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="h-9 rounded-md pl-9 pr-9 text-sm"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={() => setSearchInput('')}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Status filter pills */}
       <div className="mb-6 flex flex-wrap gap-2">
         {FILTERS.map((opt) => (
@@ -82,7 +130,7 @@ export function LeadList({ onLeadClick }: LeadListProps) {
         ))}
       </div>
 
-      {/* Today's follow-ups — always-on widget, ignores the status filter */}
+      {/* Today's follow-ups */}
       {todayFollowUps.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -97,18 +145,30 @@ export function LeadList({ onLeadClick }: LeadListProps) {
         </section>
       )}
 
-      {/* Main filtered list */}
-      <div className="space-y-3">
-        {filteredLeads.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-200 p-8 text-center">
-            <p className="text-sm text-gray-500">No leads match this filter</p>
+      {/* Main filtered list (today's leads already extracted into the section above) */}
+      {todayFollowUps.length === 0 && mainListLeads.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-200 p-8 text-center">
+          <p className="text-sm text-gray-500">{emptyMessage}</p>
+          <p className="mt-1 text-xs text-gray-400">
+            Try clearing the search or picking a different filter.
+          </p>
+        </div>
+      ) : (
+        <section>
+          {/* Only show header when today's section is also visible — avoids
+              a redundant label when there's only one block. */}
+          {todayFollowUps.length > 0 && mainListLeads.length > 0 && (
+            <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500">
+              {activeFilter === 'all' ? 'All Leads' : activeFilter}
+            </h2>
+          )}
+          <div className="space-y-3">
+            {mainListLeads.map((lead) => (
+              <LeadCard key={lead._id} lead={lead} onClick={onLeadClick} />
+            ))}
           </div>
-        ) : (
-          filteredLeads.map((lead) => (
-            <LeadCard key={lead._id} lead={lead} onClick={onLeadClick} />
-          ))
-        )}
-      </div>
+        </section>
+      )}
     </div>
   );
 }

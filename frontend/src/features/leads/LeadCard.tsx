@@ -1,7 +1,13 @@
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, startOfDay } from 'date-fns';
 import { StatusBadge } from './StatusBadge';
 import type { Lead } from '@/types/lead';
 import { cn } from '@/lib/utils';
+
+function isOverdue(lead: Lead): boolean {
+  if (!lead.followUpAt) return false;
+  if (lead.status === 'Won' || lead.status === 'Lost') return false;
+  return lead.followUpAt < startOfDay(new Date());
+}
 
 interface LeadCardProps {
   lead: Lead;
@@ -9,6 +15,7 @@ interface LeadCardProps {
 }
 
 export function LeadCard({ lead, onClick }: LeadCardProps) {
+  const overdue = isOverdue(lead);
   return (
     <button
       type="button"
@@ -17,6 +24,7 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
         'block w-full rounded-lg border border-gray-200 bg-white p-4 text-left',
         'transition-all duration-150 hover:shadow-sm hover:scale-[1.005]',
         'focus:outline-none focus:ring-2 focus:ring-gray-200 cursor-pointer',
+        overdue && 'border-l-4 border-l-red-500',
       )}
     >
       <div className="flex items-start justify-between gap-3">

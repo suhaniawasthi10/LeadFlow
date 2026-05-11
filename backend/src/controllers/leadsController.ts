@@ -74,3 +74,18 @@ export async function updateLead(
     next(err);
   }
 }
+
+export async function deleteLead(
+  req: Request<IdParams>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    const deleted = await leadsService.deleteLead(id);
+    if (!deleted) throw new AppError(404, 'Lead not found');
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

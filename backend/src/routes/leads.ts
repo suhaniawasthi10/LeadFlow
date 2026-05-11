@@ -8,6 +8,7 @@ router.post('/', leadsController.createLead);
 router.get('/', leadsController.listLeads);
 router.get('/:id', leadsController.getLead);
 router.patch('/:id', leadsController.updateLead);
+router.delete('/:id', leadsController.deleteLead);
 router.post('/:id/discussions', discussionsController.createDiscussion);
 
 export default router;

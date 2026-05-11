@@ -74,6 +74,10 @@ export async function updateLead(id: string, input: UpdateLeadInput): Promise<Le
   return parseLead(data);
 }
 
+export async function deleteLead(id: string): Promise<void> {
+  await api.delete(`/leads/${id}`);
+}
+
 export interface CreateDiscussionInput {
   note: string;
   followUpAt?: Date;

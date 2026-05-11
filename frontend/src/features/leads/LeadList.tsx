@@ -1,19 +1,67 @@
 import { useState } from 'react';
 import { isToday } from 'date-fns';
-import { Flag, Search, X } from 'lucide-react';
+import { ArrowUpDown, Flag, Search, X } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { LeadCard } from './LeadCard';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { LEAD_STATUSES, type Lead, type LeadStatus } from '@/types/lead';
 import { cn } from '@/lib/utils';
+import {
+  hasNoFollowUp,
+  isFollowUpThisWeek,
+  isFollowUpToday,
+  isOverdue,
+} from '@/lib/leadFilters';
 
 type FilterValue = LeadStatus | 'all';
+type FollowUpFilter = 'any' | 'today' | 'overdue' | 'thisWeek' | 'noFollowUp';
+type SortKey = 'recent' | 'name' | 'followUp';
 
 const FILTERS: { value: FilterValue; label: string }[] = [
   { value: 'all', label: 'All' },
   ...LEAD_STATUSES.map((s) => ({ value: s, label: s })),
 ];
+
+const FOLLOWUP_LABELS: Record<FollowUpFilter, string> = {
+  any: 'Any follow-up',
+  today: 'Today',
+  overdue: 'Overdue',
+  thisWeek: 'This week',
+  noFollowUp: 'No follow-up',
+};
+
+const SORT_LABELS: Record<SortKey, string> = {
+  recent: 'Recent activity',
+  name: 'Name A–Z',
+  followUp: 'Follow-up date',
+};
+
+function sortLeads(list: Lead[], sortBy: SortKey): Lead[] {
+  const copy = [...list];
+  switch (sortBy) {
+    case 'name':
+      return copy.sort((a, b) => a.name.localeCompare(b.name));
+    case 'followUp':
+      // Leads without a follow-up date go to the end; otherwise ascending.
+      return copy.sort((a, b) => {
+        if (!a.followUpAt && !b.followUpAt) return 0;
+        if (!a.followUpAt) return 1;
+        if (!b.followUpAt) return -1;
+        return a.followUpAt.getTime() - b.followUpAt.getTime();
+      });
+    case 'recent':
+    default:
+      return copy.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+}
 
 interface LeadListProps {
   onLeadClick?: (lead: Lead) => void;
@@ -22,6 +70,8 @@ interface LeadListProps {
 export function LeadList({ onLeadClick }: LeadListProps) {
   const { data: leads, isLoading, isError } = useLeads();
   const [activeFilter, setActiveFilter] = useState<FilterValue>('all');
+  const [followUpFilter, setFollowUpFilter] = useState<FollowUpFilter>('any');
+  const [sortBy, setSortBy] = useState<SortKey>('recent');
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebouncedValue(searchInput, 300);
   const searchQuery = debouncedSearch.trim().toLowerCase();
@@ -58,38 +108,53 @@ export function LeadList({ onLeadClick }: LeadListProps) {
     );
   }
 
-  // Search and status filter both narrow the entire view (today's section + main).
-  // Then today's gets extracted out of the main list so leads don't appear twice.
+  // Pipeline: allLeads → search → follow-up filter → status filter → extract today's
   const searchedLeads = searchQuery
     ? allLeads.filter((l) => l.name.toLowerCase().includes(searchQuery))
     : allLeads;
 
+  const followUpFilteredLeads = searchedLeads.filter((l) => {
+    switch (followUpFilter) {
+      case 'today':
+        return isFollowUpToday(l);
+      case 'overdue':
+        return isOverdue(l);
+      case 'thisWeek':
+        return isFollowUpThisWeek(l);
+      case 'noFollowUp':
+        return hasNoFollowUp(l);
+      case 'any':
+      default:
+        return true;
+    }
+  });
+
   const filteredLeads =
     activeFilter === 'all'
-      ? searchedLeads
-      : searchedLeads.filter((l) => l.status === activeFilter);
+      ? followUpFilteredLeads
+      : followUpFilteredLeads.filter((l) => l.status === activeFilter);
 
-  const todayFollowUps = filteredLeads.filter(
+  const sortedLeads = sortLeads(filteredLeads, sortBy);
+  const todayFollowUps = sortedLeads.filter(
     (l) => l.followUpAt && isToday(l.followUpAt),
   );
   const todayIds = new Set(todayFollowUps.map((l) => l._id));
-  const mainListLeads = filteredLeads.filter((l) => !todayIds.has(l._id));
+  const mainListLeads = sortedLeads.filter((l) => !todayIds.has(l._id));
 
+  // Build a specific empty-state message describing the active filters
   const rawSearch = searchInput.trim();
+  const conditions: string[] = [];
+  if (rawSearch) conditions.push(`"${rawSearch}"`);
+  if (activeFilter !== 'all') conditions.push(activeFilter);
+  if (followUpFilter !== 'any') conditions.push(FOLLOWUP_LABELS[followUpFilter]);
   const emptyMessage =
-    rawSearch && activeFilter !== 'all'
-      ? `No leads match "${rawSearch}" in ${activeFilter}`
-      : rawSearch
-        ? `No leads match "${rawSearch}"`
-        : activeFilter !== 'all'
-          ? `No ${activeFilter} leads`
-          : 'No leads match';
+    conditions.length > 0 ? `No leads match ${conditions.join(' · ')}` : 'No leads match';
 
   return (
     <div>
-      {/* Search input */}
-      <div className="mb-4">
-        <div className="relative max-w-sm">
+      {/* Search (left) + Sort (right) */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative w-full max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
           <Input
             type="text"
@@ -109,25 +174,67 @@ export function LeadList({ onLeadClick }: LeadListProps) {
             </button>
           )}
         </div>
+
+        <Select
+          value={sortBy}
+          onValueChange={(v) => v && setSortBy(v as SortKey)}
+        >
+          <SelectTrigger className="h-9 gap-2 rounded-md px-3 text-sm">
+            <ArrowUpDown className="size-3.5 text-gray-400" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(SORT_LABELS) as SortKey[]).map((value) => (
+              <SelectItem key={value} value={value}>
+                {SORT_LABELS[value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Status filter pills */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {FILTERS.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => setActiveFilter(opt.value)}
+      {/* Status pills (left) + Follow-up dropdown (right) */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setActiveFilter(opt.value)}
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                activeFilter === opt.value
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <Select
+          value={followUpFilter}
+          onValueChange={(v) => v && setFollowUpFilter(v as FollowUpFilter)}
+        >
+          <SelectTrigger
             className={cn(
-              'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-              activeFilter === opt.value
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+              'h-7 rounded-full border-transparent px-3 text-xs font-medium transition-colors',
+              followUpFilter === 'any'
+                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-900 text-white hover:bg-gray-800',
             )}
           >
-            {opt.label}
-          </button>
-        ))}
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(FOLLOWUP_LABELS) as FollowUpFilter[]).map((value) => (
+              <SelectItem key={value} value={value}>
+                {FOLLOWUP_LABELS[value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Today's follow-ups */}

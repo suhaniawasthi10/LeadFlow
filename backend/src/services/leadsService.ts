@@ -1,5 +1,5 @@
 import { startOfDay, endOfDay, addDays } from 'date-fns';
-import { SortOrder } from 'mongoose';
+import mongoose, { SortOrder } from 'mongoose';
 import { Lead, LeadDoc } from '../models/Lead';
 import { Discussion, DiscussionDoc } from '../models/Discussion';
 import {
@@ -64,4 +64,16 @@ export async function getLeadWithDiscussions(
     .sort({ createdAt: -1 })
     .lean<DiscussionDoc[]>();
   return { lead, discussions };
+}
+
+// Sequential delete (no transaction — single-node mongo). Children first so
+// that if we crash mid-way, an empty lead is more recoverable than orphan
+// discussions pointing to a missing parent.
+export async function deleteLead(id: string): Promise<boolean> {
+  if (!mongoose.Types.ObjectId.isValid(id)) return false;
+  const exists = await Lead.exists({ _id: id });
+  if (!exists) return false;
+  await Discussion.deleteMany({ leadId: id });
+  await Lead.findByIdAndDelete(id);
+  return true;
 }

@@ -1,13 +1,8 @@
-import { formatDistanceToNow, startOfDay } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { StatusBadge } from './StatusBadge';
 import type { Lead } from '@/types/lead';
 import { cn } from '@/lib/utils';
-
-function isOverdue(lead: Lead): boolean {
-  if (!lead.followUpAt) return false;
-  if (lead.status === 'Won' || lead.status === 'Lost') return false;
-  return lead.followUpAt < startOfDay(new Date());
-}
+import { isOverdue } from '@/lib/leadFilters';
 
 interface LeadCardProps {
   lead: Lead;

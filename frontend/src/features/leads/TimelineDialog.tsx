@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow, startOfDay } from 'date-fns';
-import { Building, Calendar as CalendarIcon, Clock, Phone } from 'lucide-react';
+import { Building, Calendar as CalendarIcon, Clock, Phone, Trash2 } from 'lucide-react';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -28,6 +28,8 @@ import { Input } from '@/components/ui/input';
 import { useLead } from '@/hooks/useLead';
 import { useUpdateLead } from '@/hooks/useUpdateLead';
 import { useCreateDiscussion } from '@/hooks/useCreateDiscussion';
+import { useDeleteLead } from '@/hooks/useDeleteLead';
+import { ConfirmDialog } from './ConfirmDialog';
 import { LEAD_STATUSES, type LeadStatus } from '@/types/lead';
 
 const noteSchema = z
@@ -54,6 +56,8 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
   const { data } = useLead(leadId);
   const updateLead = useUpdateLead();
   const createDiscussion = useCreateDiscussion();
+  const deleteLead = useDeleteLead();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Optimistic status so the Select doesn't flash back to the old value
   // while the PATCH is in flight.
@@ -126,6 +130,18 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
     }
   };
 
+  const handleDelete = () => {
+    if (!leadId) return;
+    deleteLead.mutate(leadId, {
+      onSuccess: () => {
+        toast.success('Lead deleted');
+        setShowDeleteConfirm(false);
+        onClose();
+      },
+      onError: () => toast.error('Failed to delete lead'),
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
@@ -161,18 +177,29 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
                 </div>
               </div>
 
-              <Select value={localStatus} onValueChange={handleStatusChange}>
-                <SelectTrigger className="h-9 min-w-[140px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEAD_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-1.5">
+                <Select value={localStatus} onValueChange={handleStatusChange}>
+                  <SelectTrigger className="h-9 min-w-[140px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEAD_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  aria-label="Delete lead"
+                  title="Delete lead"
+                  className="rounded-md p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
             </div>
 
             {/* Timeline body */}
@@ -301,6 +328,18 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
           </>
         )}
       </DialogContent>
+
+      {data && (
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          title={`Delete ${data.lead.name}?`}
+          description={`This will permanently delete the lead and ${data.discussions.length} discussion${data.discussions.length === 1 ? '' : 's'}. This action cannot be undone.`}
+          confirmLabel="Delete lead"
+          isLoading={deleteLead.isPending}
+          onConfirm={handleDelete}
+        />
+      )}
     </Dialog>
   );
 }

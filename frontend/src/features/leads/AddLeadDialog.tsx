@@ -18,7 +18,16 @@ import { useCreateLead } from '@/hooks/useCreateLead';
 const addLeadSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   company: z.string().trim().optional(),
-  phone: z.string().trim().optional(),
+  phone: z
+    .string()
+    .trim()
+    .refine(
+      (val) =>
+        !val ||
+        (/^[\d\s+()-]+$/.test(val) && val.replace(/\D/g, '').length >= 7),
+      { message: 'Enter a valid phone number (at least 7 digits)' },
+    )
+    .optional(),
 });
 
 type AddLeadInput = z.infer<typeof addLeadSchema>;

@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # Stage 1: build TypeScript → dist/
 FROM node:22-alpine AS build
 WORKDIR /app

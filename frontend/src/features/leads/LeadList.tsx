@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { isToday } from 'date-fns';
-import { ArrowUpDown, Calendar, Flag, Search, X } from 'lucide-react';
+import { ArrowUpDown, Calendar, Flag, Plus, Search, UserPlus, X } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { LeadCard } from './LeadCard';
@@ -65,9 +65,18 @@ function sortLeads(list: Lead[], sortBy: SortKey): Lead[] {
 
 interface LeadListProps {
   onLeadClick?: (lead: Lead) => void;
+  onAddLead?: () => void;
 }
 
-export function LeadList({ onLeadClick }: LeadListProps) {
+const SKELETON_WIDTHS = [
+  { name: 'w-32', company: 'w-20', note: 'w-72' },
+  { name: 'w-28', company: 'w-24', note: 'w-56' },
+  { name: 'w-36', company: 'w-16', note: 'w-64' },
+  { name: 'w-24', company: 'w-28', note: 'w-80' },
+  { name: 'w-40', company: 'w-20', note: 'w-60' },
+];
+
+export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
   const { data: leads, isLoading, isError } = useLeads();
   const [activeFilter, setActiveFilter] = useState<FilterValue>('all');
   const [followUpFilter, setFollowUpFilter] = useState<FollowUpFilter>('any');
@@ -76,14 +85,28 @@ export function LeadList({ onLeadClick }: LeadListProps) {
   const debouncedSearch = useDebouncedValue(searchInput, 300);
   const searchQuery = debouncedSearch.trim().toLowerCase();
 
+  const clearFilters = () => {
+    setSearchInput('');
+    setActiveFilter('all');
+    setFollowUpFilter('any');
+    setSortBy('recent');
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
+        {SKELETON_WIDTHS.map((w, i) => (
           <div
             key={i}
-            className="h-20 animate-pulse rounded-lg border border-gray-200 bg-gray-50"
-          />
+            className="animate-pulse rounded-lg border border-gray-200 bg-white p-4"
+          >
+            <div className="flex items-center gap-2">
+              <div className={cn('h-3 rounded bg-gray-200', w.name)} />
+              <div className="h-3 w-14 rounded-md bg-gray-100" />
+            </div>
+            <div className={cn('mt-2 h-2.5 rounded bg-gray-100', w.company)} />
+            <div className={cn('mt-3 h-3 rounded bg-gray-100', w.note)} />
+          </div>
         ))}
       </div>
     );
@@ -101,9 +124,24 @@ export function LeadList({ onLeadClick }: LeadListProps) {
 
   if (allLeads.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-200 p-8 text-center">
-        <p className="text-sm text-gray-500">No leads yet</p>
-        <p className="mt-1 text-xs text-gray-400">Add your first lead to get started.</p>
+      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-gray-200 py-16 text-center">
+        <UserPlus className="size-8 text-gray-300" />
+        <div>
+          <p className="text-sm font-medium text-gray-900">No leads yet</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Add your first lead to get started.
+          </p>
+        </div>
+        {onAddLead && (
+          <button
+            type="button"
+            onClick={onAddLead}
+            className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          >
+            <Plus className="size-3.5" />
+            Add new lead
+          </button>
+        )}
       </div>
     );
   }
@@ -255,11 +293,21 @@ export function LeadList({ onLeadClick }: LeadListProps) {
 
       {/* Main filtered list (today's leads already extracted into the section above) */}
       {todayFollowUps.length === 0 && mainListLeads.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-200 p-8 text-center">
-          <p className="text-sm text-gray-500">{emptyMessage}</p>
-          <p className="mt-1 text-xs text-gray-400">
-            Try clearing the search or picking a different filter.
-          </p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-gray-200 py-16 text-center">
+          <Search className="size-8 text-gray-300" />
+          <div>
+            <p className="text-sm font-medium text-gray-900">{emptyMessage}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Try adjusting your search or filter.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="mt-1 text-xs font-medium text-indigo-600 hover:underline"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
         <section>

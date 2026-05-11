@@ -54,7 +54,10 @@ function App() {
         </div>
       </header>
       <main className="mx-auto max-w-[1100px] px-6 pt-12 pb-24">
-        <LeadList onLeadClick={(lead) => setActiveLeadId(lead._id)} />
+        <LeadList
+          onLeadClick={(lead) => setActiveLeadId(lead._id)}
+          onAddLead={() => setIsAddOpen(true)}
+        />
       </main>
 
       <AddLeadDialog open={isAddOpen} onOpenChange={setIsAddOpen} />

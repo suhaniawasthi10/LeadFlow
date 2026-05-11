@@ -2,6 +2,25 @@
 
 A single-screen lightweight CRM for tracking leads, logging discussions, and setting follow-up reminders. Built as an internship take-home.
 
+## Live demo
+
+🌐 **<https://lead-flow-henna.vercel.app>**
+
+No setup needed — log in with the demo credentials below.
+
+```
+Email:    demo@leadflow.test
+Password: demo1234
+```
+
+Deployed stack:
+
+- **Frontend** on Vercel (Vite SPA on their CDN)
+- **Backend** on Railway (Node + Express, built from `backend/Dockerfile`)
+- **Database** on MongoDB Atlas (M0 free tier, pre-seeded with the demo user + 6 leads)
+
+Deployment was a stretch goal beyond the brief — the spec only required a local-runnable app. The same code runs end-to-end locally with `docker compose up` (see Quick start below).
+
 ## Tech stack
 
 | Layer | Stack |
@@ -13,12 +32,7 @@ A single-screen lightweight CRM for tracking leads, logging discussions, and set
 
 ## Demo credentials
 
-```
-Email:    demo@leadflow.test
-Password: demo1234
-```
-
-Created by the seed script. Each logged-in user only sees their own leads.
+Credentials shown above in the [Live demo](#live-demo) section. Same account works in local Docker / dev setups — created by the seed script. Each logged-in user only sees their own leads.
 
 ## Quick start with Docker
 
@@ -204,9 +218,10 @@ Built with assistance from Claude (Anthropic) for boilerplate, debugging, and co
 - The decision to add auth as a stretch goal beyond the spec
 - The JWT-in-localStorage trade-off and its documented migration path
 - Multi-tenant scoping at the service layer (rather than as middleware filters), so the data contract enforces it
+- The decision to deploy (Vercel + Railway + Atlas) as a second stretch goal
 - UI decisions: Linear/Attio aesthetic, pure-black primary accent, status badge palette deviating from the wireframe's greens, "…" actions menu over an adjacent trash icon
 
-Claude assisted with implementation details, refactors, and a curl-based test suite I used to verify the auth + multi-tenant security boundaries.
+Claude assisted with implementation details, refactors, a curl-based test suite I used to verify the auth + multi-tenant security boundaries, and debugging deploy issues (Railway's `dockerfile:1` buildkit stall, Vercel's multi-service auto-detection).
 
 ## License
 

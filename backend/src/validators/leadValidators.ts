@@ -8,10 +8,13 @@ export const createLeadSchema = z.object({
     .string()
     .trim()
     .refine(
-      (val) =>
-        !val ||
-        (/^[\d\s+()-]+$/.test(val) && val.replace(/\D/g, '').length >= 7),
-      { message: 'Enter a valid phone number (at least 7 digits)' },
+      (val) => {
+        if (!val) return true;
+        if (!/^[\d\s+()-]+$/.test(val)) return false;
+        const digits = val.replace(/\D/g, '').length;
+        return digits >= 7 && digits <= 15;
+      },
+      { message: 'Enter a valid phone number (7–15 digits)' },
     )
     .optional(),
   status: z.enum(LEAD_STATUSES).optional(),

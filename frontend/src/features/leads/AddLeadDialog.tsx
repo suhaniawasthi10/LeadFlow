@@ -23,10 +23,13 @@ const addLeadSchema = z.object({
     .string()
     .trim()
     .refine(
-      (val) =>
-        !val ||
-        (/^[\d\s+()-]+$/.test(val) && val.replace(/\D/g, '').length >= 7),
-      { message: 'Enter a valid phone number (at least 7 digits)' },
+      (val) => {
+        if (!val) return true;
+        if (!/^[\d\s+()-]+$/.test(val)) return false;
+        const digits = val.replace(/\D/g, '').length;
+        return digits >= 7 && digits <= 15;
+      },
+      { message: 'Enter a valid phone number (7–15 digits)' },
     )
     .optional(),
 });
@@ -47,6 +50,7 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
   } = useForm<AddLeadInput>({
     resolver: zodResolver(addLeadSchema),
     defaultValues: { name: '', company: '', phone: '' },
+    mode: 'onTouched',
   });
 
   const createLead = useCreateLead();
@@ -128,6 +132,9 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
                 className="h-10 rounded-md px-3 text-sm"
                 {...register('phone')}
               />
+              {errors.phone && (
+                <p className="text-xs text-red-600">{errors.phone.message}</p>
+              )}
             </div>
           </div>
 

@@ -136,7 +136,7 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
           <button
             type="button"
             onClick={onAddLead}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-gray-900"
+            className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
           >
             <Plus className="size-3.5" />
             Add new lead
@@ -206,7 +206,7 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
               type="button"
               onClick={() => setSearchInput('')}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded text-gray-400 transition-colors hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900"
             >
               <X className="size-4" />
             </button>
@@ -240,7 +240,7 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
               type="button"
               onClick={() => setActiveFilter(opt.value)}
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                'rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2',
                 activeFilter === opt.value
                   ? 'bg-gray-900 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
@@ -304,7 +304,7 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
           <button
             type="button"
             onClick={clearFilters}
-            className="mt-1 text-xs font-medium text-gray-900 hover:underline"
+            className="mt-1 rounded text-xs font-medium text-gray-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
           >
             Clear filters
           </button>

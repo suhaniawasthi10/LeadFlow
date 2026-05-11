@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogClose,
@@ -53,8 +54,9 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="h-9 rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-60"
+            className="h-9 gap-2 rounded-md bg-red-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
           >
+            {isLoading && <Loader2 className="size-3.5 animate-spin" />}
             {isLoading ? 'Deleting…' : confirmLabel}
           </Button>
         </div>

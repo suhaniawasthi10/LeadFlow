@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { AxiosError } from 'axios';
 
 import { Input } from '@/components/ui/input';
@@ -126,8 +126,9 @@ export function AuthPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 w-full rounded-md bg-black text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-900 disabled:opacity-60"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-black text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
             >
+              {isSubmitting && <Loader2 className="size-4 animate-spin" />}
               {isSubmitting ? 'Loading…' : mode === 'login' ? 'Sign in' : 'Sign up'}
             </button>
           </form>

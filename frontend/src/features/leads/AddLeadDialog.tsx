@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -145,8 +146,9 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
             <Button
               type="submit"
               disabled={createLead.isPending}
-              className="h-9 rounded-md bg-black px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-900 disabled:opacity-60"
+              className="h-9 gap-2 rounded-md bg-black px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
             >
+              {createLead.isPending && <Loader2 className="size-3.5 animate-spin" />}
               {createLead.isPending ? 'Saving…' : 'Save Lead'}
             </Button>
           </div>

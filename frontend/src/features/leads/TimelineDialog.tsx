@@ -8,6 +8,7 @@ import {
   Building,
   Calendar as CalendarIcon,
   Clock,
+  Loader2,
   MoreHorizontal,
   Phone,
   Trash2,
@@ -337,8 +338,11 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
                 <Button
                   type="submit"
                   disabled={createDiscussion.isPending}
-                  className="h-9 rounded-md bg-black px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-900 disabled:opacity-60"
+                  className="h-9 gap-2 rounded-md bg-black px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
                 >
+                  {createDiscussion.isPending && (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  )}
                   {createDiscussion.isPending ? 'Saving…' : 'Save Note'}
                 </Button>
               </div>

@@ -18,7 +18,7 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
       className={cn(
         'block w-full rounded-lg border border-gray-200 bg-white p-4 text-left',
         'transition-colors duration-100 hover:bg-gray-50/50',
-        'focus:outline-none focus:ring-2 focus:ring-gray-200 cursor-pointer',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 cursor-pointer',
         overdue && 'border-l-4 border-l-red-500',
       )}
     >

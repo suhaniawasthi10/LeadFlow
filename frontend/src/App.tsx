@@ -37,7 +37,7 @@ function App() {
               type="button"
               onClick={logout}
               title="Sign out"
-              className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
             >
               <LogOut className="size-3.5" />
               Logout
@@ -45,7 +45,7 @@ function App() {
             <button
               type="button"
               onClick={() => setIsAddOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
             >
               <Plus className="size-4" />
               Add New Lead

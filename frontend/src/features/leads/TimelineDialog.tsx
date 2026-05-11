@@ -4,7 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow, startOfDay } from 'date-fns';
-import { Building, Calendar as CalendarIcon, Clock, Phone, Trash2 } from 'lucide-react';
+import {
+  Building,
+  Calendar as CalendarIcon,
+  Clock,
+  MoreHorizontal,
+  Phone,
+  Trash2,
+} from 'lucide-react';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -12,7 +19,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +30,12 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import { useLead } from '@/hooks/useLead';
 import { useUpdateLead } from '@/hooks/useUpdateLead';
@@ -179,10 +191,12 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
 
               <div className="flex items-center gap-1.5">
                 <Select value={localStatus} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="h-9 min-w-[140px]">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger
+                    className="h-9 min-w-[140px] gap-2 text-sm text-gray-900 hover:bg-gray-50"
+                  >
+                    <span>{localStatus ?? 'Status'}</span>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="bottom" alignItemWithTrigger={false}>
                     {LEAD_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
@@ -190,15 +204,24 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  aria-label="Delete lead"
-                  title="Delete lead"
-                  className="rounded-md p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="size-4" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label="Lead actions"
+                    title="Actions"
+                    className="rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[160px]">
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Trash2 className="size-4" />
+                      Delete lead
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
@@ -244,7 +267,7 @@ export function TimelineDialog({ leadId, onClose }: TimelineDialogProps) {
               <Textarea
                 placeholder="Log a new discussion…"
                 rows={3}
-                className="resize-none rounded-md text-sm"
+                className="min-h-[80px] resize-none rounded-md text-sm focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1"
                 {...register('note')}
               />
               {errors.note && (

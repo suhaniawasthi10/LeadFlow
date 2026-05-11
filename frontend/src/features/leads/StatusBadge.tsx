@@ -10,6 +10,18 @@ const STATUS_STYLES: Record<LeadStatus, string> = {
   Lost: 'bg-gray-100 text-gray-600',
 };
 
+// Saturated dot colors for use in dropdowns / lists where the soft pastel
+// badge backgrounds don't have enough contrast against the popover surface.
+// eslint-disable-next-line react-refresh/only-export-components
+export const STATUS_DOT_STYLES: Record<LeadStatus, string> = {
+  New: 'bg-blue-500',
+  Contacted: 'bg-amber-500',
+  Qualified: 'bg-violet-500',
+  'Proposal Sent': 'bg-pink-500',
+  Won: 'bg-emerald-500',
+  Lost: 'bg-gray-400',
+};
+
 interface StatusBadgeProps {
   status: LeadStatus;
   className?: string;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { isToday } from 'date-fns';
-import { ArrowUpDown, Flag, Search, X } from 'lucide-react';
+import { ArrowUpDown, Calendar, Flag, Search, X } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { LeadCard } from './LeadCard';
@@ -219,13 +219,14 @@ export function LeadList({ onLeadClick }: LeadListProps) {
         >
           <SelectTrigger
             className={cn(
-              'h-7 rounded-full border-transparent px-3 text-xs font-medium transition-colors',
+              'h-7 gap-1.5 rounded-full border-transparent px-3 text-xs font-medium transition-colors',
               followUpFilter === 'any'
                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 : 'bg-gray-900 text-white hover:bg-gray-800',
             )}
           >
-            <SelectValue />
+            <Calendar className="size-3.5" />
+            <span>Follow-up: {FOLLOWUP_LABELS[followUpFilter]}</span>
           </SelectTrigger>
           <SelectContent>
             {(Object.keys(FOLLOWUP_LABELS) as FollowUpFilter[]).map((value) => (

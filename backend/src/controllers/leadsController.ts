@@ -10,14 +10,20 @@ import { AppError } from '../middleware/errorHandler';
 
 type IdParams = { id: string };
 
+function getUserId(req: Request): string {
+  if (!req.userId) throw new AppError(401, 'Authentication required');
+  return req.userId;
+}
+
 export async function createLead(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
+    const userId = getUserId(req);
     const input = createLeadSchema.parse(req.body);
-    const lead = await leadsService.createLead(input);
+    const lead = await leadsService.createLead(input, userId);
     res.status(201).json(lead);
   } catch (err) {
     next(err);
@@ -30,8 +36,9 @@ export async function listLeads(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const userId = getUserId(req);
     const query = listLeadsQuerySchema.parse(req.query);
-    const leads = await leadsService.listLeads(query);
+    const leads = await leadsService.listLeads(query, userId);
     res.json(leads);
   } catch (err) {
     next(err);
@@ -44,11 +51,12 @@ export async function getLead(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const userId = getUserId(req);
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new AppError(404, 'Lead not found');
     }
-    const result = await leadsService.getLeadWithDiscussions(id);
+    const result = await leadsService.getLeadWithDiscussions(id, userId);
     if (!result) throw new AppError(404, 'Lead not found');
     res.json(result);
   } catch (err) {
@@ -62,12 +70,13 @@ export async function updateLead(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const userId = getUserId(req);
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new AppError(404, 'Lead not found');
     }
     const input = updateLeadSchema.parse(req.body);
-    const lead = await leadsService.updateLead(id, input);
+    const lead = await leadsService.updateLead(id, input, userId);
     if (!lead) throw new AppError(404, 'Lead not found');
     res.json(lead);
   } catch (err) {
@@ -81,8 +90,9 @@ export async function deleteLead(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const userId = getUserId(req);
     const { id } = req.params;
-    const deleted = await leadsService.deleteLead(id);
+    const deleted = await leadsService.deleteLead(id, userId);
     if (!deleted) throw new AppError(404, 'Lead not found');
     res.status(204).send();
   } catch (err) {

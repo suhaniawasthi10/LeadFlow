@@ -3,6 +3,7 @@ import { LEAD_STATUSES, LeadStatus } from '../types/lead';
 
 export interface LeadDoc {
   _id: Types.ObjectId;
+  userId: Types.ObjectId;
   name: string;
   company?: string;
   phone?: string;
@@ -16,6 +17,7 @@ export interface LeadDoc {
 
 const leadSchema = new Schema<LeadDoc>(
   {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true, trim: true },
     company: { type: String, trim: true },
     phone: { type: String, trim: true },
@@ -24,13 +26,17 @@ const leadSchema = new Schema<LeadDoc>(
       enum: LEAD_STATUSES,
       default: 'New',
       required: true,
-      index: true,
     },
-    followUpAt: { type: Date, index: true },
+    followUpAt: { type: Date },
     lastDiscussionNote: { type: String },
     lastDiscussionAt: { type: Date },
   },
   { timestamps: true },
 );
+
+// Compound indexes leading with userId — every query is tenant-scoped first.
+leadSchema.index({ userId: 1, status: 1 });
+leadSchema.index({ userId: 1, followUpAt: 1 });
+leadSchema.index({ userId: 1, updatedAt: -1 });
 
 export const Lead = model<LeadDoc>('Lead', leadSchema);

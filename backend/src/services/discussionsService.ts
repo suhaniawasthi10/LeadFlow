@@ -17,11 +17,13 @@ export async function listDiscussionsForLead(
 export async function createDiscussion(
   leadId: string,
   input: CreateDiscussionInput,
+  userId: string,
 ): Promise<{ discussion: DiscussionDoc; lead: LeadDoc }> {
   if (!mongoose.Types.ObjectId.isValid(leadId)) {
     throw new AppError(404, 'Lead not found');
   }
-  const exists = await Lead.exists({ _id: leadId });
+  // Ownership check — 404 (not 403) so we don't leak whether the lead exists for another user.
+  const exists = await Lead.exists({ _id: leadId, userId });
   if (!exists) throw new AppError(404, 'Lead not found');
 
   const discussion = await Discussion.create({ leadId, ...input });
@@ -32,7 +34,9 @@ export async function createDiscussion(
   };
   if (input.followUpAt) update.followUpAt = input.followUpAt;
 
-  const lead = await Lead.findByIdAndUpdate(leadId, update, { new: true }).lean<LeadDoc>();
+  const lead = await Lead.findOneAndUpdate({ _id: leadId, userId }, update, {
+    new: true,
+  }).lean<LeadDoc>();
   if (!lead) throw new AppError(500, 'Lead disappeared during discussion write');
 
   return { discussion: discussion.toObject(), lead };

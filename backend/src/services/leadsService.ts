@@ -8,23 +8,33 @@ import {
   ListLeadsQuery,
 } from '../validators/leadValidators';
 
-export async function createLead(input: CreateLeadInput): Promise<LeadDoc> {
-  const lead = await Lead.create(input);
+export async function createLead(
+  input: CreateLeadInput,
+  userId: string,
+): Promise<LeadDoc> {
+  const lead = await Lead.create({ ...input, userId });
   return lead.toObject();
 }
 
 export async function updateLead(
   id: string,
   input: UpdateLeadInput,
+  userId: string,
 ): Promise<LeadDoc | null> {
-  return Lead.findByIdAndUpdate(id, input, {
+  // Scoped update — returns null if id doesn't exist OR isn't owned by this user.
+  return Lead.findOneAndUpdate({ _id: id, userId }, input, {
     new: true,
     runValidators: true,
   }).lean<LeadDoc>();
 }
 
-export async function listLeads(query: ListLeadsQuery): Promise<LeadDoc[]> {
-  const filter: Record<string, unknown> = {};
+export async function listLeads(
+  query: ListLeadsQuery,
+  userId: string,
+): Promise<LeadDoc[]> {
+  // userId leads the filter so the compound index { userId, status/followUpAt }
+  // can serve every shape of query without a separate tenant-check step.
+  const filter: Record<string, unknown> = { userId };
 
   if (query.status) filter.status = query.status;
   if (query.search) filter.name = { $regex: query.search, $options: 'i' };
@@ -36,14 +46,12 @@ export async function listLeads(query: ListLeadsQuery): Promise<LeadDoc[]> {
       break;
     case 'overdue':
       filter.followUpAt = { $lt: startOfDay(now) };
-      // Don't override an explicit status filter; otherwise exclude closed leads.
       if (!query.status) filter.status = { $nin: ['Won', 'Lost'] };
       break;
     case 'thisWeek':
       filter.followUpAt = { $gte: startOfDay(now), $lte: endOfDay(addDays(now, 7)) };
       break;
     case 'noFollowUp':
-      // null in mongo also matches missing fields.
       filter.followUpAt = null;
       break;
   }
@@ -57,8 +65,9 @@ export async function listLeads(query: ListLeadsQuery): Promise<LeadDoc[]> {
 
 export async function getLeadWithDiscussions(
   id: string,
+  userId: string,
 ): Promise<{ lead: LeadDoc; discussions: DiscussionDoc[] } | null> {
-  const lead = await Lead.findById(id).lean<LeadDoc>();
+  const lead = await Lead.findOne({ _id: id, userId }).lean<LeadDoc>();
   if (!lead) return null;
   const discussions = await Discussion.find({ leadId: id })
     .sort({ createdAt: -1 })
@@ -66,12 +75,11 @@ export async function getLeadWithDiscussions(
   return { lead, discussions };
 }
 
-// Sequential delete (no transaction — single-node mongo). Children first so
-// that if we crash mid-way, an empty lead is more recoverable than orphan
-// discussions pointing to a missing parent.
-export async function deleteLead(id: string): Promise<boolean> {
+// Children first, then parent. Same single-node-mongo no-transaction trade-off
+// as the discussion-create cascade.
+export async function deleteLead(id: string, userId: string): Promise<boolean> {
   if (!mongoose.Types.ObjectId.isValid(id)) return false;
-  const exists = await Lead.exists({ _id: id });
+  const exists = await Lead.exists({ _id: id, userId });
   if (!exists) return false;
   await Discussion.deleteMany({ leadId: id });
   await Lead.findByIdAndDelete(id);

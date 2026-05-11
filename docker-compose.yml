@@ -1,0 +1,40 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: leadflow-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: leadflow-backend
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/leadflow
+      PORT: "3000"
+      NODE_ENV: production
+      # Demo secret — replace with a random value from a secret manager in prod.
+      # Matches the dev fallback so JWTs issued in dev keep working in compose.
+      JWT_SECRET: dev-secret-change-me
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: leadflow-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongodb-data:
+    # External-name pin so compose reuses the volume created by the
+    # standalone `docker run` setup — your existing leads survive the switch.
+    name: leadflow-mongo-data

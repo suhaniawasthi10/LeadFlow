@@ -1,12 +1,16 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { addDays, subHours } from 'date-fns';
 import { connectDB } from '../config/db';
 import { Lead } from '../models/Lead';
 import { Discussion } from '../models/Discussion';
+import { User } from '../models/User';
 import { LeadStatus } from '../types/lead';
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/leadflow';
+const DEMO_EMAIL = 'demo@leadflow.test';
+const DEMO_PASSWORD = 'demo1234';
 
 type SeedDiscussion = {
   note: string;
@@ -104,9 +108,19 @@ async function seed(): Promise<void> {
   await connectDB(MONGO_URI);
   console.log('[seed] connected');
 
-  // Always clear before seeding — this is a deterministic fixture, not a migration.
+  // Always clear leads/discussions — deterministic fixture, not a migration.
+  // Users are upserted (not wiped) so existing logins keep working.
   await Promise.all([Lead.deleteMany({}), Discussion.deleteMany({})]);
-  console.log('[seed] cleared collections');
+  console.log('[seed] cleared lead/discussion collections');
+
+  // Upsert demo user — idempotent across seed runs.
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const demoUser = await User.findOneAndUpdate(
+    { email: DEMO_EMAIL },
+    { $setOnInsert: { email: DEMO_EMAIL, passwordHash } },
+    { upsert: true, new: true },
+  );
+  console.log(`[seed] demo user ready: ${demoUser.email}`);
 
   const now = new Date();
 
@@ -123,6 +137,7 @@ async function seed(): Promise<void> {
     // In production the discussion-create cascade keeps these in sync; the seed
     // mimics that end state directly so "recent activity" sort works on demo data.
     const { insertedId: leadId } = await Lead.collection.insertOne({
+      userId: demoUser._id,
       name: seedLead.name,
       company: seedLead.company,
       phone: seedLead.phone,
@@ -149,7 +164,9 @@ async function seed(): Promise<void> {
     );
   }
 
-  console.log(`[seed] inserted ${seedLeads.length} leads`);
+  console.log(`[seed] inserted ${seedLeads.length} leads for ${demoUser.email}`);
+  console.log('');
+  console.log(`[seed] ▶ login with:  ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
   await mongoose.disconnect();
 }
 

@@ -145,7 +145,7 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
             <Button
               type="submit"
               disabled={createLead.isPending}
-              className="h-9 rounded-md bg-indigo-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+              className="h-9 rounded-md bg-black px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-900 disabled:opacity-60"
             >
               {createLead.isPending ? 'Saving…' : 'Save Lead'}
             </Button>

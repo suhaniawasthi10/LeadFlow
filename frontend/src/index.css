@@ -126,5 +126,8 @@
     }
   html {
     @apply font-sans;
+    /* Tabular figures + curly digits — keeps "1 day ago" and "13 hours ago"
+       columns aligned in the list. */
+    font-feature-settings: "tnum", "cv11";
     }
 }

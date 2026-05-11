@@ -45,7 +45,7 @@ function App() {
             <button
               type="button"
               onClick={() => setIsAddOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
             >
               <Plus className="size-4" />
               Add New Lead
@@ -53,7 +53,7 @@ function App() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-[1100px] px-6 pt-12 pb-24">
+      <main className="mx-auto max-w-[1100px] px-6 pt-6 pb-24">
         <LeadList
           onLeadClick={(lead) => setActiveLeadId(lead._id)}
           onAddLead={() => setIsAddOpen(true)}

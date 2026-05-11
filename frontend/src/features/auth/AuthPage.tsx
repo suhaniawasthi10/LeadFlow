@@ -126,7 +126,7 @@ export function AuthPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 w-full rounded-md bg-indigo-600 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-60"
+              className="h-10 w-full rounded-md bg-black text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-900 disabled:opacity-60"
             >
               {isSubmitting ? 'Loading…' : mode === 'login' ? 'Sign in' : 'Sign up'}
             </button>

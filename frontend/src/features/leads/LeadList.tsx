@@ -136,7 +136,7 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
           <button
             type="button"
             onClick={onAddLead}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+            className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-gray-900"
           >
             <Plus className="size-3.5" />
             Add new lead
@@ -278,12 +278,12 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
 
       {/* Today's follow-ups */}
       {todayFollowUps.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
+        <section className="mb-10">
+          <h2 className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-gray-500">
             <Flag className="size-3.5" />
             Today's Follow-ups
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {todayFollowUps.map((lead) => (
               <LeadCard key={lead._id} lead={lead} onClick={onLeadClick} />
             ))}
@@ -304,7 +304,7 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
           <button
             type="button"
             onClick={clearFilters}
-            className="mt-1 text-xs font-medium text-indigo-600 hover:underline"
+            className="mt-1 text-xs font-medium text-gray-900 hover:underline"
           >
             Clear filters
           </button>
@@ -314,11 +314,11 @@ export function LeadList({ onLeadClick, onAddLead }: LeadListProps) {
           {/* Only show header when today's section is also visible — avoids
               a redundant label when there's only one block. */}
           {todayFollowUps.length > 0 && mainListLeads.length > 0 && (
-            <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500">
+            <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.08em] text-gray-500">
               {activeFilter === 'all' ? 'All Leads' : activeFilter}
             </h2>
           )}
-          <div className="space-y-3">
+          <div className="space-y-2">
             {mainListLeads.map((lead) => (
               <LeadCard key={lead._id} lead={lead} onClick={onLeadClick} />
             ))}
